@@ -9,4 +9,6 @@ Gem::Specification.new do |s|
   s.files = ['README.rdoc', 'LICENSE', 'lib/iterm_window.rb']
   s.require_paths = ["lib"]
   s.has_rdoc = true
+
+  s.add_development_dependency 'rspec', '~> 2.6.0'
 end

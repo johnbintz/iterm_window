@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'iterm_window'
 
 describe ItermWindow do
   before(:each) do
