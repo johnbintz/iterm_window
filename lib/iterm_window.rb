@@ -67,15 +67,18 @@
 #     first_tab.select # brings first tab back to focus
 #   end
 
+require 'tempfile'
 
 # The ItermWindow class models an iTerm terminal window and allows for full control via Ruby commands.
 class ItermWindow
+  attr_reader :tab_color_files
 
   # While you can directly use ItermWindow.new, using either ItermWindow.open or
   # ItermWindow.current is the preferred method.
   def initialize
     @buffer = []
     @tabs = {}
+    @tab_color_files = []
   end
 
   # Creates a new terminal window, runs the block on it
@@ -105,16 +108,18 @@ class ItermWindow
 
   # Outputs a single line of Applescript code
   def output(command)
-    @buffer << command.gsub(/'/, '"')
+    @buffer << command.gsub("'", '"').gsub('\\', '\\\\\\')
   end
 
+  def concatenated_buffer
+    @buffer.join("\n")
+  end
 
   private
 
   # Outputs @buffer to the command line as an osascript function
   def send_output
-    buffer_str = @buffer.map {|line| "-e '#{line}'"}.join(' ')
-    shell_out "osascript #{buffer_str}"
+    shell_out
   end
 
   # Initializes the terminal window
@@ -137,16 +142,18 @@ class ItermWindow
     create_tab_convenience_method(name)
   end
 
-  private
-
   def create_tab_convenience_method(name)
     (class << self; self; end).send(:define_method, name) do
       @tabs[name]
     end
   end
 
-  def shell_out(str)
-    %x{str}
+  def shell_out
+    Tempfile.open('iterm') do |f|
+      f.print concatenated_buffer
+      f.close
+      system %{osascript #{f.path}}
+    end
   end
 
 
@@ -194,6 +201,15 @@ class ItermWindow
       end
     end
 
+    # Sets the title of the tab (ie the text on the iTerm tab itself)
+    def tab_color(color)
+      if @currently_executing_block
+        output "write text 'cat #{file = create_tab_color_file(color)} && rm #{file}'"
+      else
+        execute_block { tab_color(color) }
+      end
+    end
+
     # Runs a block on this tab with proper opening and closing statements
     def execute_block(&block)
       @currently_executing_block = true
@@ -203,13 +219,34 @@ class ItermWindow
       @currently_executing_block = false
     end
 
+    def self.create_tab_color(color)
+      raise ArgumentError.new("bad hex color: #{color}") if color.downcase[%r{[^a-f0-9]}] || !([ 3, 6 ].include?(color.length))
+      %w{red green blue}.zip(color.scan(
+        (case color.length
+        when 3
+          /./
+        when 6
+          /../
+        end)
+      ).collect { |part| 
+        part += part if part.length == 1
+        part.hex
+      }).collect do |color, brightness|
+        "\033]6;1;bg;#{color};brightness;#{brightness}\a"
+      end.join
+    end
+
     private
 
     def output(command)
       @window.output command
     end
 
-
+    def create_tab_color_file(color)
+      file = Tempfile.open('iterm').path + '.tc'
+      File.open(file, 'wb') { |f| f.puts self.class.create_tab_color(color) }
+      @window.tab_color_files << file
+      file
+    end
   end
-
 end

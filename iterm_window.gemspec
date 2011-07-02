@@ -11,4 +11,6 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
 
   s.add_development_dependency 'rspec', '~> 2.6.0'
+  s.add_development_dependency 'fakefs'
+  s.add_development_dependency 'mocha'
 end

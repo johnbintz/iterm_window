@@ -4,12 +4,13 @@ require 'iterm_window'
 describe ItermWindow do
   before(:each) do
     @window = ItermWindow.new
+    Kernel.stubs(:system)
   end
   
   describe ".current" do
     it "should instantiate the current window and run the block" do
-      ItermWindow.should_receive(:new).and_return(@window)
-      @window.should_receive(:run).with(:current)
+      ItermWindow.expects(:new).returns(@window)
+      @window.expects(:run).with(:current)
       ItermWindow.current do
         
       end
@@ -18,8 +19,8 @@ describe ItermWindow do
   
   describe ".open" do
     it "should instantiate a new window and run the block" do
-      ItermWindow.should_receive(:new).and_return(@window)
-      @window.should_receive(:run).with(:new)
+      ItermWindow.expects(:new).returns(@window)
+      @window.expects(:run).with(:new)
       ItermWindow.open do
         
       end
@@ -28,12 +29,25 @@ describe ItermWindow do
   
   describe "opening a tab (example 1)" do
     before(:each) do
-      ItermWindow.should_receive(:new).and_return(@window)
+      ItermWindow.expects(:new).returns(@window)
     end
     
     it "should generate and run the right Applescript" do
-      desired = "osascript -e 'tell application \"iTerm\"' -e 'activate' -e 'set myterm to (make new terminal)' -e 'tell myterm' -e 'launch session \"Default Session\"' -e 'set my_tab_tty to the tty of the last session' -e 'tell session id my_tab_tty' -e 'write text \"cd ~/projects/my_project/trunk\"' -e 'write text \"mate ./\"' -e 'end tell' -e 'end tell' -e 'end tell'"
-      @window.should_receive(:shell_out).with(desired)
+      desired = (<<-CMD).strip
+tell application "iTerm"
+activate
+set myterm to (make new terminal)
+tell myterm
+launch session "Default Session"
+set my_tab_tty to the tty of the last session
+tell session id my_tab_tty
+write text \"cd ~/projects/my_project/trunk\"
+write text \"mate ./\"
+end tell
+end tell
+end tell
+CMD
+      @window.expects(:shell_out)
       
       ItermWindow.open do
         open_tab :my_tab do
@@ -41,17 +55,47 @@ describe ItermWindow do
           write "mate ./"
         end
       end
+
+      @window.concatenated_buffer.should == desired
     end
   end
   
   describe "open multiple tabs (example 2)" do
     before(:each) do
-      ItermWindow.should_receive(:new).and_return(@window)
+      ItermWindow.expects(:new).returns(@window)
     end
     
     it "should generate and run the right Applescript" do
-      desired = "osascript -e 'tell application \"iTerm\"' -e 'activate' -e 'set myterm to first terminal' -e 'tell myterm' -e 'launch session \"Default Session\"' -e 'set project_dir_tty to the tty of the last session' -e 'tell session id project_dir_tty' -e 'write text \"cd ~/projects/my_project/trunk\"' -e 'write text \"mate ./\"' -e 'set name to \"MyProject Dir\"' -e 'end tell' -e 'launch session \"Default Session\"' -e 'set server_tty to the tty of the last session' -e 'tell session id server_tty' -e 'write text \"cd ~/projects/my_project/trunk\"' -e 'write text \"script/server -p 3005\"' -e 'set name to \"MyProject Server\"' -e 'end tell' -e 'launch session \"Default Session\"' -e 'set console_tty to the tty of the last session' -e 'tell session id console_tty' -e 'write text \"cd ~/projects/my_project/trunk\"' -e 'write text \"script/console\"' -e 'set name to \"MyProject Console\"' -e 'end tell' -e 'end tell' -e 'end tell'"
-      @window.should_receive(:shell_out).with(desired)
+      desired = (<<-CMD).strip
+tell application "iTerm"
+activate
+set myterm to first terminal
+tell myterm
+launch session "Default Session"
+set project_dir_tty to the tty of the last session
+tell session id project_dir_tty
+write text "cd ~/projects/my_project/trunk"
+write text "mate ./"
+set name to "MyProject Dir"
+end tell
+launch session "Default Session"
+set server_tty to the tty of the last session
+tell session id server_tty
+write text "cd ~/projects/my_project/trunk"
+write text "script/server -p 3005"
+set name to "MyProject Server"
+end tell
+launch session "Default Session"
+set console_tty to the tty of the last session
+tell session id console_tty
+write text "cd ~/projects/my_project/trunk"
+write text "script/console"
+set name to "MyProject Console"
+end tell
+end tell
+end tell
+CMD
+      @window.expects(:shell_out)
       
       ItermWindow.current do
         open_tab :project_dir do
@@ -72,17 +116,37 @@ describe ItermWindow do
           set_title "MyProject Console"
         end
       end
+
+      @window.concatenated_buffer.should == desired
     end
   end
   
   describe "open tabs using bookmarks (example 3)" do
     before(:each) do
-      ItermWindow.should_receive(:new).and_return(@window)
+      ItermWindow.expects(:new).returns(@window)
     end
     
     it "should generate and run the correct Applescript" do
-      desired = "osascript -e 'tell application \"iTerm\"' -e 'activate' -e 'set myterm to first terminal' -e 'tell myterm' -e 'launch session \"Default Session\"' -e 'set project_dir_tty to the tty of the last session' -e 'tell session id project_dir_tty' -e 'write text \"cd ~/projects/my_project/trunk\"' -e 'write text \"mate ./\"' -e 'end tell' -e 'launch session \"MyProject Server\"' -e 'set server_tty to the tty of the last session' -e 'launch session \"MyProject Console\"' -e 'set console_tty to the tty of the last session' -e 'select session id project_dir_tty' -e 'end tell' -e 'end tell'"
-      @window.should_receive(:shell_out).with(desired)
+      desired = (<<-CMD).strip
+tell application "iTerm"
+activate
+set myterm to first terminal
+tell myterm
+launch session "Default Session"
+set project_dir_tty to the tty of the last session
+tell session id project_dir_tty
+write text "cd ~/projects/my_project/trunk"
+write text "mate ./"
+end tell
+launch session "MyProject Server"
+set server_tty to the tty of the last session
+launch session "MyProject Console"
+set console_tty to the tty of the last session
+select session id project_dir_tty
+end tell
+end tell
+CMD
+      @window.stubs(:shell_out)
       
       ItermWindow.current do
         open_tab :project_dir do
@@ -95,17 +159,38 @@ describe ItermWindow do
     
         project_dir.select
       end
+
+      @window.concatenated_buffer.should == desired
     end
   end
-  
+
   describe "switching between tabs (example 4)" do
     before(:each) do
-      ItermWindow.should_receive(:new).and_return(@window)
+      ItermWindow.expects(:new).returns(@window)
     end
     
     it "should generate and run the correct Applescript" do
-      desired = "osascript -e 'tell application \"iTerm\"' -e 'activate' -e 'set myterm to (make new terminal)' -e 'tell myterm' -e 'launch session \"Default Session\"' -e 'set first_tab_tty to the tty of the last session' -e 'launch session \"Default Session\"' -e 'set second_tab_tty to the tty of the last session' -e 'tell session id first_tab_tty' -e 'write text \"cd ~/projects\"' -e 'write text \"ls\"' -e 'end tell' -e 'tell session id second_tab_tty' -e 'write text \"echo \"hello there!\"\"' -e 'end tell' -e 'select session id first_tab_tty' -e 'end tell' -e 'end tell'"
-      @window.should_receive(:shell_out).with(desired)
+      desired = (<<-CMD).strip
+tell application "iTerm"
+activate
+set myterm to (make new terminal)
+tell myterm
+launch session "Default Session"
+set first_tab_tty to the tty of the last session
+launch session "Default Session"
+set second_tab_tty to the tty of the last session
+tell session id first_tab_tty
+write text "cd ~/projects"
+write text "ls"
+end tell
+tell session id second_tab_tty
+write text "echo "hello there!""
+end tell
+select session id first_tab_tty
+end tell
+end tell
+CMD
+      @window.expects(:shell_out)
       
       ItermWindow.open do
         open_tab :first_tab
@@ -116,6 +201,61 @@ describe ItermWindow do
         end
         second_tab.write "echo 'hello there!'"
         first_tab.select
+      end
+
+      @window.concatenated_buffer.should == desired
+    end
+  end
+
+  describe 'tab color' do
+    before(:each) do
+      ItermWindow.expects(:new).returns(@window)
+    end
+    
+    it "should generate and run the correct Applescript" do
+      @window.expects(:shell_out)
+      ItermWindow::Tab.any_instance.expects(:create_tab_color_file).with("FF00AA")
+      
+      ItermWindow.open do
+        open_tab :first_tab do
+          tab_color "FF00AA"
+        end
+      end
+    end
+  end
+
+  describe ".create_tab_color" do
+    subject { ItermWindow::Tab.create_tab_color(color) }
+
+    context 'bad hex color' do
+      [ "whatever", "F00F" ].each do |bad|
+        context bad do
+          let(:color) { bad }
+
+          it 'should raise an exception on bad hex color' do
+            expect { subject }.to raise_error(ArgumentError, /bad hex color/)
+          end
+        end
+      end
+    end
+
+    context 'long hex color' do
+      let(:color) { "FF00AA" }
+
+      it 'should create an escape sequence to execute to change a tab color' do
+        subject.should match(/red;brightness;255/)
+        subject.should match(/green;brightness;0/)
+        subject.should match(/blue;brightness;170/)
+      end
+    end
+
+    context 'short hex color' do
+      let(:color) { "F0A" }
+
+      it 'should create an escape sequence to execute to change a tab color' do
+        subject.should match(/red;brightness;255/)
+        subject.should match(/green;brightness;0/)
+        subject.should match(/blue;brightness;170/)
       end
     end
   end
