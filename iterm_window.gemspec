@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name = 'johnbintz-iterm_window'
+  s.name = 'iterm_window'
   s.version = '0.4.0'
   s.authors = [ 'Chris Powers', 'John Bintz' ]
   s.date = Time.now
