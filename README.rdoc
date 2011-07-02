@@ -67,3 +67,6 @@ the tab name as an ItermWindow method.
     second_tab.write "echo 'hello there!'"
     first_tab.select # brings first tab back to focus
   end
+
+Also, you get <tt>tab_color</tt> to change the color of the tab itself. Give it a hex value like <tt>F73</tt> or <tt>F7F3F1</tt>.
+
