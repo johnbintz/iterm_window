@@ -73,17 +73,36 @@ require 'tempfile'
 class ItermWindow
   attr_reader :tab_color_files
 
+  class << self
+    def colors=(colors)
+      @colors = colors
+    end
+
+    def colors
+      @colors
+    end
+  end
+
+  ItermWindow.colors = {
+    :rails => 'F99',
+    :rspec => '99F',
+    :js => '9F9',
+    :doc => 'FF9',
+    :log => 'DFF',
+  }
+
   # While you can directly use ItermWindow.new, using either ItermWindow.open or
   # ItermWindow.current is the preferred method.
   def initialize
     @buffer = []
     @tabs = {}
     @tab_color_files = []
+    @default_tab = nil
   end
 
   # Creates a new terminal window, runs the block on it
-  def self.open(&block)
-    self.new.run(:new, &block)
+  def self.open(options = {}, &block)
+    self.new.run(:new, options, &block)
   end
 
   # Selects the first terminal window, runs the block on it
@@ -91,7 +110,8 @@ class ItermWindow
     self.new.run(:current, &block)
   end
 
-  def run(window_type = :new, &block)
+  def run(window_type = :new, options = {}, &block)
+    @options = options
     run_commands window_type, &block
     send_output
   end
@@ -102,8 +122,13 @@ class ItermWindow
   end
 
   # Creates a new tab from 'Default Session', runs the block on it
-  def open_tab(name, &block)
-    create_tab(name, 'Default Session', &block)
+  def open_tab(name, options = {}, &block)
+    create_tab(name, 'Default Session', options, &block)
+    @default_tab = name if options[:default]
+  end
+
+  def default_tab(name, options = {}, &block)
+    open_tab(name, options.merge(:default => true), &block)
   end
 
   # Outputs a single line of Applescript code
@@ -131,14 +156,15 @@ class ItermWindow
     output "set myterm to #{window_types[window_type]}"
     output "tell myterm"
     self.instance_eval(&block) if block_given?
+    @tabs[@default_tab].select if @default_tab
     output "end tell"
     output "end tell"
   end
 
   # Creates a new Tab object, either default or from a bookmark,
   # and creates a convenience method for retrieval
-  def create_tab(name, bookmark=nil, &block)
-    @tabs[name] = Tab.new(self, name, bookmark, &block)
+  def create_tab(name, bookmark=nil, options = {}, &block)
+    @tabs[name] = Tab.new(self, name, bookmark, @options.merge(options), &block)
     create_tab_convenience_method(name)
   end
 
@@ -163,7 +189,7 @@ class ItermWindow
     attr_reader :name
     attr_reader :bookmark
 
-    def initialize(window, name, bookmark = nil, &block)
+    def initialize(window, name, bookmark = nil, options = {}, &block)
       @name = name
       @bookmark = bookmark
       @window = window
@@ -171,6 +197,9 @@ class ItermWindow
       output "launch session '#{@bookmark}'"
       # store tty id for later access
       output "set #{name}_tty to the tty of the last session"
+      write "cd #{options[:dir]}" if options[:dir]
+      tab_color options[:color] if options[:color]
+
       execute_block &block if block_given?
     end
 
@@ -219,6 +248,10 @@ class ItermWindow
       @currently_executing_block = false
     end
 
+    def method_missing(name, *args)
+      write("#{name} #{args.join(' ')}")
+    end
+
     def self.create_tab_color(color)
       raise ArgumentError.new("bad hex color: #{color}") if color.downcase[%r{[^a-f0-9]}] || !([ 3, 6 ].include?(color.length))
       %w{red green blue}.zip(color.scan(
@@ -244,9 +277,18 @@ class ItermWindow
 
     def create_tab_color_file(color)
       file = Tempfile.open('iterm').path + '.tc'
-      File.open(file, 'wb') { |f| f.puts self.class.create_tab_color(color) }
+      File.open(file, 'wb') { |f| f.puts self.class.create_tab_color(ensure_color(color)) }
       @window.tab_color_files << file
       file
+    end
+
+    def ensure_color(color)
+      case color
+      when Symbol
+        ItermWindow.colors[color]
+      else
+        color
+      end
     end
   end
 end

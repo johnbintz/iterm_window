@@ -20,7 +20,7 @@ describe ItermWindow do
   describe ".open" do
     it "should instantiate a new window and run the block" do
       ItermWindow.expects(:new).returns(@window)
-      @window.expects(:run).with(:new)
+      @window.expects(:run).with(:new, {})
       ItermWindow.open do
         
       end
@@ -207,6 +207,80 @@ CMD
     end
   end
 
+  describe 'magic commands' do
+    before(:each) do
+      ItermWindow.expects(:new).returns(@window)
+    end
+    
+    it "should cd to the directory for the tab" do
+      @window.expects(:shell_out)
+      
+      ItermWindow.open do
+        open_tab :first_tab do
+          bundle "exec guard"
+        end
+      end
+
+      @window.concatenated_buffer.should match(/write text "bundle exec guard"/)
+    end
+  end
+
+  describe 'default tab' do
+    before(:each) do
+      ItermWindow.expects(:new).returns(@window)
+    end
+    
+    it "should mark the tab as the default tab" do
+      @window.expects(:shell_out)
+      
+      ItermWindow.open do
+        open_tab :first_tab, :default => true do
+        end
+      end
+
+      @window.concatenated_buffer.should match(/select session id first_tab_tty/)
+    end
+
+    it "should mark the tab as the default tab" do
+      @window.expects(:shell_out)
+      
+      ItermWindow.open do
+        default_tab :first_tab do
+        end
+      end
+
+      @window.concatenated_buffer.should match(/select session id first_tab_tty/)
+    end
+  end
+
+  describe 'change directory' do
+    before(:each) do
+      ItermWindow.expects(:new).returns(@window)
+    end
+    
+    it "should cd to the directory for the tab" do
+      @window.expects(:shell_out)
+      
+      ItermWindow.open do
+        open_tab :first_tab, :dir => 'my-dir' do
+        end
+      end
+
+      @window.concatenated_buffer.should match(/cd my-dir/)
+    end
+
+    it "should cd to the directry for all tabs" do
+      @window.expects(:shell_out)
+      
+      ItermWindow.open :dir => 'my-dir' do
+        open_tab :first_tab do
+        end
+      end
+
+      @window.concatenated_buffer.should match(/cd my-dir/)
+    end
+  end
+
   describe 'tab color' do
     before(:each) do
       ItermWindow.expects(:new).returns(@window)
@@ -219,6 +293,26 @@ CMD
       ItermWindow.open do
         open_tab :first_tab do
           tab_color "FF00AA"
+        end
+      end
+    end
+
+    it 'should generate color in a tab definition' do
+      @window.expects(:shell_out)
+      ItermWindow::Tab.any_instance.expects(:create_tab_color_file).with("FF00AA")
+      
+      ItermWindow.open do
+        open_tab :first_tab, :color => "FF00AA" do
+        end
+      end
+    end
+
+    it 'should use predetermined colors' do
+      @window.expects(:shell_out)
+      ItermWindow::Tab.any_instance.expects(:create_tab_color_file).with(:rails)
+      
+      ItermWindow.open do
+        open_tab :first_tab, :color => :rails do
         end
       end
     end
