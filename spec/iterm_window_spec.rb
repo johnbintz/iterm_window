@@ -27,6 +27,18 @@ describe ItermWindow do
     end
   end
   
+  describe '.run_file' do
+    it "should read the file and create a window" do
+      ItermWindow.expects(:new).returns(@window)
+      @window.expects(:run).with(:new, {})
+      ItermWindow.run_file(<<-FILE)
+open do
+  open_tab :test
+end
+FILE
+    end
+  end
+
   describe "opening a tab (example 1)" do
     before(:each) do
       ItermWindow.expects(:new).returns(@window)

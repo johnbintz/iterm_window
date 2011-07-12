@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'iterm_window'
+
+ItermWindow.run_file(File.read('iTermfile'))
+

@@ -100,6 +100,10 @@ class ItermWindow
     @default_tab = nil
   end
 
+  def self.run_file(file)
+    instance_eval(file)
+  end
+
   # Creates a new terminal window, runs the block on it
   def self.open(options = {}, &block)
     self.new.run(:new, options, &block)
