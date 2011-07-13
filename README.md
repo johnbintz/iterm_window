@@ -60,6 +60,7 @@ In a nutshell:
 * `:color` changes the window chrome and tab color to the given hex code (3 or 6 hex digits) or built-in color. See ItermWindow.colors for the list of available colors.
 
 `open` can also take an options hash:
+
 * `:dir` changes all tabs to the given directory before executing commands.
 
 More docs coming soon! Also, look at `lib/iterm_window.rb` for more usage examples.
