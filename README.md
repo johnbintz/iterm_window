@@ -31,7 +31,7 @@ open :dir => Dir.pwd do
   default_tab :console
 
   open_tab :rails, :color => :rails do
-    guard "-g rails"
+    rails "s"
   end
 
   open_tab :rspec, :color => :rspec do
