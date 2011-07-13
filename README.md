@@ -17,6 +17,12 @@ Enter *iTermWindow*, a terminal window/tab multiplexer and command runner for Ma
 awesome Terminal.app replacement. iTerm's scriptability and customization allows one to create complex
 project configurations for one's terminal setups.
 
+## Installation
+
+`gem install itermwindow` or add it to your Gemfile.
+
+## Usage
+
 The `iterm-window` executable will open and run an `iTermfile` file in the current directory. 
 An `iTermfile` file looks like this:
 
