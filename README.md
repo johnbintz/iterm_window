@@ -54,7 +54,7 @@ In a nutshell:
     * Set the title of the tab with `set_title`.
     * Or run a command magically (using `method_missing`).
 
-`open_tab`, and `default_tab` can take an options hash:
+`open_tab` and `default_tab` can take an options hash:
 
 * `:dir` changes to the given directory before executing commands.
 * `:color` changes the window chrome and tab color to the given hex code (3 or 6 hex digits) or built-in color. See ItermWindow.colors for the list of available colors.
