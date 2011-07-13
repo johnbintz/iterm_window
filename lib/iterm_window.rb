@@ -81,6 +81,10 @@ class ItermWindow
     def colors
       @colors
     end
+
+    def add_command(name, &block)
+      ItermWindow::Tab.send(:define_method, name, block)
+    end
   end
 
   ItermWindow.colors = {

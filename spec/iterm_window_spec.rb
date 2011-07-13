@@ -39,6 +39,24 @@ FILE
     end
   end
 
+  describe '.add_command' do
+    before do
+      ItermWindow::Tab.send(:remove_method, :test) rescue nil
+    end
+
+    it 'should define a method on the Tab class' do
+      ItermWindow.add_command :test do |params|
+        params
+      end
+
+      ItermWindow::Tab.should have_a_method_named(:test, 1)
+    end
+
+    after do
+      ItermWindow::Tab.send(:remove_method, :test) rescue nil
+    end
+  end
+
   describe "opening a tab (example 1)" do
     before(:each) do
       ItermWindow.expects(:new).returns(@window)

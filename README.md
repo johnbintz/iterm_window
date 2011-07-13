@@ -63,6 +63,18 @@ In a nutshell:
 
 * `:dir` changes all tabs to the given directory before executing commands.
 
+### Adding commands that tabs can execute
+
+You can define your own tab commands with `ItermWindow.add_command`:
+
+``` ruby
+ItermWindow.add_command :guard do |group = nil|
+  command = "bundle exec guard"
+  command << " -g #{group}" if group
+  write_text command
+end
+```
+
 More docs coming soon! Also, look at `lib/iterm_window.rb` for more usage examples.
 
 * Developed March 17, 2008 by Chris Powers
