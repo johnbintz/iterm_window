@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.date = Time.now
   s.homepage = 'http://github.com/johnbintz/iterm_window'
   s.email = [ 'chrisjpowers@gmail.com', 'john@coswellproductions.com' ]
-  s.summary = 'The ItermWindow class models an iTerm terminal window and allows for full control via Ruby commands.'
+  s.summary = 'Easily start up new windows and tabs for your projects in iTerm.'
   s.files = ['README.md', 'LICENSE', 'CHANGELOG.md', 'lib/iterm_window.rb']
   s.require_paths = ["lib"]
   s.has_rdoc = true

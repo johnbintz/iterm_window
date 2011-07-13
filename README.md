@@ -13,7 +13,7 @@ Opening all the necessary terminals, starting the right processes in each, and m
 is a long, slow process when done by hand. But guess what -- computers can be used to automate processes that
 otherwise would be laborious when done manually!
 
-Enter *iTermWindow*, a terminal window/tab multiplexer and command runner for Mac OS X and iTerm, the really
+Enter *iTermWindow*, a terminal window/tab multiplexer and command runner for Mac OS X and [iTerm](http://www.iterm2.com/), the really
 awesome Terminal.app replacement. iTerm's scriptability and customization allows one to create complex
 project configurations for one's terminal setups.
 
