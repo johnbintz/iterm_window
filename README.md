@@ -73,6 +73,12 @@ ItermWindow.add_command :guard do |group = nil|
   command << " -g #{group}" if group
   write_text command
 end
+
+open do
+  default_tab do
+    guard :rails
+  end
+end
 ```
 
 More docs coming soon! Also, look at `lib/iterm_window.rb` for more usage examples.
