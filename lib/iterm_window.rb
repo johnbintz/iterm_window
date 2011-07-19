@@ -241,7 +241,7 @@ class ItermWindow
     # Sets the title of the tab (ie the text on the iTerm tab itself)
     def tab_color(color)
       if @currently_executing_block
-        output "write text 'cat #{file = create_tab_color_file(color)} && rm #{file}'"
+        output "write text 'cat #{file = create_tab_color_file(color)} && rm -f #{file}'"
       else
         execute_block { tab_color(color) }
       end
